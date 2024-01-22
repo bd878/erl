@@ -9,6 +9,7 @@ start() ->
   register(frequency, spawn(frequency, init, [])).
 
 init() ->
+  process_flag(trap_exit, true),
   Frequencies = {get_frequencies(), []},
   loop(Frequencies).
 
@@ -42,6 +43,9 @@ loop(Frequencies) ->
       NewFrequencies = deallocate(Frequencies, Freq),
       reply(Pid, ok),
       loop(NewFrequencies);
+    {'EXIT', Pid, _Reason} ->
+      NewFrequencies = exited(Frequencies, Pid),
+      loop(NewFrequencies);
     {request, Pid, stop} ->
       reply(Pid, ok)
   end.
@@ -55,7 +59,19 @@ reply(Pid, Reply) ->
 allocate({[], Allocated}, _Pid) ->
   {{[], Allocated}, {error, no_frequency}};
 allocate({[Freq|Free], Allocated}, Pid) ->
+  link(Pid),
   {{Free, [{Freq, Pid}|Allocated]}, {ok, Freq}}.
 deallocate({Free, Allocated}, Freq) ->
+  {value, {Freq,Pid}} = lists:keysearch(Freq,1,Allocated),
+  unlink(Pid),
   NewAllocated=lists:keydelete(Freq, 1, Allocated),
   {[Freq|Free], NewAllocated}.
+
+exited({Free, Allocated}, Pid) ->
+  case lists:keysearch(Pid,2,Allocated) of
+    {value,{Freq,Pid}} ->
+      NewAllocated = lists:keydelete(Freq,1,Allocated),
+      {[Freq|Free],NewAllocated};
+    false ->
+      {Free,Allocated}
+  end.

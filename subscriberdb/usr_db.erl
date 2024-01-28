@@ -2,9 +2,11 @@
 %%% Description : Database API for subscriber DB
 
 -module(usr_db).
--include("usr.hrl").
 -export([create_tables/1, close_tables/0]).
--export([add_usr/1, update_usr/1, get_index/1,lookup_msisdn/1,lookup_id/1,restore_backup/0]).
+-export([add_usr/1, update_usr/1, get_index/1,
+  lookup_msisdn/1, lookup_id/1, restore_backup/0, delete_disabled/0]).
+
+-include("usr.hrl").
 
 create_tables(FileName) ->
   ets:new(usrRam, [named_table, {keypos, #usr.msisdn}]),
@@ -59,10 +61,11 @@ delete_disabled() ->
 
 loop_delete_disabled('$end_of_table') ->
   ok;
+
 loop_delete_disabled(PhoneNo) ->
   case ets:lookup(usrRam, PhoneNo) of
-    usr{status=disabled, id = CustId}] ->
-      delete_usr(PhoneNo,CustId);
+    #usr{status=disabled, id=CustId} ->
+      usr:delete_usr(PhoneNo, CustId);
     _ -> ok
   end,
   loop_delete_disabled(ets:next(usrRam, PhoneNo)).

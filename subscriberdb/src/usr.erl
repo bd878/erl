@@ -43,6 +43,59 @@ delete_disabled() ->
 lookup_id(CustId) ->
   usr_db:lookup_id(CustId).
 
+%% Mnesia DB
+
+create_tables() ->
+  mnesia:create_table(usr, [{disc_copies, [node()]}, {ram_copies, nodes()},
+    {type, set}, {attributes, record_info(fields, usr)},
+    {index, [id]}]).
+
+ensure_loaded() ->
+  ok = mnesia:wait_for_tables([usr], 600000).
+
+add_usr_to_mnesia(PhoneNo, CustId, Plan) when Plan==prepay; Plan==postpay ->
+  Rec = #usr{msisdn = PhoneNo,
+             id     = CustId,
+             plan   = Plan},
+  Fun = fun() -> mnesia:write(Rec) end,
+  {atomic, Res} = mnesia:transaction(Fun),
+  Res.
+
+delete_usr_from_mnesia(CustId) ->
+  F = fun() -> case mnesia:index_read(usr, CustId, id) of
+      [] -> {error, instance};
+      [Usr] -> mnesia:delete({usr, Usr#usr.msisdn})
+    end,
+  {atomic, Result} = mnesia:transaction(F),
+  Result.
+
+set_service_mnesia(CustId, Service, Flag) when Flag=true; Flag==false ->
+  F = fun() ->
+      case mnesia:index_read(usr, CustId, id) of
+        [] -> {error, instance};
+        [Usr] ->
+          Services = lists:delete(Service, Usr#usr.services),
+          NewServices = case Flag of
+            true -> [Service|Services];
+            false -> Services
+          end,
+          mnesia:write(Usr#usr{services=NewServices})
+        end
+      end,
+  {atomic, Result} = mnesia:transaction(F),
+  Result.
+
+set_status_mnesia(CustId, Status) when Status==enabled; Status==disabled ->
+  F = fun() ->
+      case mnesia:index_read(usr, CustId, id) of
+        [] -> {error, instance};
+        [Usr] -> mnesia:write(Usr#usr{status=Status})
+      end
+    end,
+  {atomic, Result} = mnesia:transaction(F),
+  Result.
+
+
 %% Service API
 
 lookup_msisdn(PhoneNo) ->

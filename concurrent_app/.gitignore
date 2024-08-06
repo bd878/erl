@@ -1,0 +1,7 @@
+*.beam
+*.swp
+*.swo
+*.swn
+*.patch
+*.o
+*.out

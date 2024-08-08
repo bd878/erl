@@ -24,13 +24,11 @@ loop(S = #state{}) ->
 
     {Pid, {post, Msg}} ->
       Messages = [#message{value=Msg, ref=Ref} | S#state.messages],
-      io:format("~p~n", [Messages]),
       Pid ! {ok, Ref},
       loop(S#state{messages=Messages});
 
     {Pid, {get, SearchRef}} ->
       Values = [Value || {MsgRef, Value} <- S#state.messages, MsgRef == SearchRef],
-      io:format("~p~n", [Values]),
       Pid ! {ok, Values},
       loop(S);
 

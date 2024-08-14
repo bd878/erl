@@ -7,7 +7,7 @@ task(Acc0, ReduceFun) ->
       Acc = case get(K) of
           undefined -> Acc0;
           CurrentAcc -> CurrentAcc
-        end,
+      end,
       put(K, ReduceFun(V, Acc)),
       task(Acc0, ReduceFun);
     {collect, Pid} ->

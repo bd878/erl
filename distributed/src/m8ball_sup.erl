@@ -1,0 +1,2 @@
+-module(m8ball_sup).
+-behaviour(supervisor).

@@ -1,0 +1,6 @@
+{release,
+ {"messages", "1.0"},
+ {erts, "14.2.1"},
+ [{kernel, "9.2"},
+  {stdlib, "5.2"},
+  {messages, "1.0"}]}.

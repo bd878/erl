@@ -1,3 +1,6 @@
 *.beam
 *.swp
 *.patch
+*.boot
+*.tar.gz
+*.dump

@@ -1,6 +1,8 @@
 -module(http_server).
 -behaviour(application).
--export([start/2, stop/0]).
+-export([start/2, stop/1]).
 
-start(normal, _Args) ->
-  {ok, Pid}.
+%%% CALLBACKS
+start(normal, Args) ->
+  http_server_sup:start_link(Args).
+stop(_State) -> ok.

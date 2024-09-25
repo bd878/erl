@@ -4,3 +4,4 @@
 *.boot
 *.tar.gz
 *.dump
+*.log
